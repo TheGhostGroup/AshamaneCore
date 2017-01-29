@@ -833,7 +833,11 @@ void WorldSession::SaveTutorialsData(CharacterDatabaseTransaction& trans)
     stmt->setUInt32(MAX_ACCOUNT_TUTORIAL_VALUES, GetAccountId());
     trans->Append(stmt);
 
-    _tutorialsChanged = false;
+    // now has, set flag so next save uses update query
+    if (!hasTutorialsInDB)
+        _tutorialsChanged |= TUTORIALS_FLAG_LOADED_FROM_DB;
+
+    _tutorialsChanged &= ~TUTORIALS_FLAG_CHANGED;
 }
 
 bool WorldSession::IsAddonRegistered(const std::string& prefix) const
