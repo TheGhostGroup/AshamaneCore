@@ -2409,6 +2409,11 @@ void ScriptMgr::OnQuestStatusChange(Player* player, uint32 questId)
     FOREACH_SCRIPT(PlayerScript)->OnQuestStatusChange(player, questId);
 }
 
+void ScriptMgr::OnPlayerRepop(Player* player)
+{
+    FOREACH_SCRIPT(PlayerScript)->OnPlayerRepop(player);
+}
+
 void ScriptMgr::OnModifyPower(Player* player, Powers power, int32 oldValue, int32& newValue, bool regen, bool after)
 {
     FOREACH_SCRIPT(PlayerScript)->OnModifyPower(player, power, oldValue, newValue, regen, after);
