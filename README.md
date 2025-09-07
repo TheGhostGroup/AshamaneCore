@@ -17,8 +17,7 @@
 
 ## Build Status
 
-[![master Build Status](https://travis-ci.org/AshamaneProject/AshamaneCore.svg?branch=master)](https://travis-ci.org/AshamaneProject/AshamaneCore)
-[![Build status](https://ci.appveyor.com/api/projects/status/kb0wjxh3va9c3e0k/branch/master?svg=true)](https://ci.appveyor.com/project/Traesh/ashamanecore/branch/master)
+
 
 ## Introduction
 
@@ -60,33 +59,26 @@ with Ashamane Database (ADB) :
 It is completely open source; community involvement is highly encouraged.
 
 If you wish to contribute ideas or code please visit our site linked below or
-make pull requests to our [Github repository](https://github.com/AshamaneProject/AshamaneCore/pulls).
+make pull requests to our [Github repository](https://github.com/LegionEmulationProject/AshamaneCore/pulls).
 
 ## Requirements
 
-Software requirements are available in the [wiki](https://www.trinitycore.info/display/tc/Requirements) for
+Software requirements are available in the [wiki](https://www.trinitycore.info/) for
 Windows, Linux and macOS.
 
 ## Install
 
-Detailed installation guides are available in the [wiki](https://www.trinitycore.info/display/tc/Installation+Guide) for
+Detailed installation guides are available in the [wiki](https://www.trinitycore.info/) for
 Windows, Linux and macOS.
-
-## Contribute
-
-You can help Ashamane using our [Patreon Page](https://www.patreon.com/ashamane). All the collected money will be used to pay developers for their work using bountysource
-
-## Reporting issues
-
-Issues can be reported via our [Mantis issue tracker](https://bt.ashamane.com).
-
-Please take the time to review existing issues before submitting your own to
-prevent duplicates.
 
 ## Submitting fixes
 
 C++ fixes are submitted as pull requests via Github.
 For SQL only fixes open a ticket or if a bug report exists for the bug post on existing ticket.
+
+## Project Goal
+
+Continue developing this into a decent World of Warcraft Legion Emulator.
 
 ## Copyright
 
@@ -102,5 +94,4 @@ Read file [THANKS](THANKS).
 
 * [Website](https://www.ashamane.com)
 * [Wiki](https://www.trinitycore.info)
-* [Forums](http://forum.ashamane.com/)
 * [TrinityCore](https://www.trinitycore.org/)
