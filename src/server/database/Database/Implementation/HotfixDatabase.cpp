@@ -981,9 +981,9 @@ void HotfixDatabaseConnection::DoPrepareStatements()
 
     // SpellItemEnchantment.db2
     PrepareStatement(HOTFIX_SEL_SPELL_ITEM_ENCHANTMENT, "SELECT ID, Name, EffectArg1, EffectArg2, EffectArg3, EffectScalingPoints1, "
-        "EffectScalingPoints2, EffectScalingPoints3, TransmogCost, IconFileDataID, EffectPointsMin1, EffectPointsMin2, EffectPointsMin3, ItemVisual, "
+        "EffectScalingPoints2, EffectScalingPoints3, TransmogPlayerConditionID, TransmogCost, IconFileDataID, EffectPointsMin1, EffectPointsMin2, EffectPointsMin3, ItemVisual, "
         "Flags, RequiredSkillID, RequiredSkillRank, ItemLevel, Charges, Effect1, Effect2, Effect3, ConditionID, MinLevel, MaxLevel, ScalingClass, "
-        "ScalingClassRestricted, TransmogPlayerConditionID FROM spell_item_enchantment ORDER BY ID DESC", CONNECTION_SYNCH);
+        "ScalingClassRestricted, FROM spell_item_enchantment ORDER BY ID DESC", CONNECTION_SYNCH);
     PREPARE_LOCALE_STMT(HOTFIX_SEL_SPELL_ITEM_ENCHANTMENT, "SELECT ID, Name_lang FROM spell_item_enchantment_locale WHERE locale = ?", CONNECTION_SYNCH);
 
     // SpellItemEnchantmentCondition.db2

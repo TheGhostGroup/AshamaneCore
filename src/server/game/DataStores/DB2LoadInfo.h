@@ -4915,6 +4915,7 @@ struct SpellItemEnchantmentLoadInfo
             { false, FT_FLOAT, "EffectScalingPoints1" },
             { false, FT_FLOAT, "EffectScalingPoints2" },
             { false, FT_FLOAT, "EffectScalingPoints3" },
+            { false, FT_INT, "TransmogPlayerConditionID" },
             { false, FT_INT, "TransmogCost" },
             { false, FT_INT, "IconFileDataID" },
             { true, FT_SHORT, "EffectPointsMin1" },
@@ -4934,7 +4935,7 @@ struct SpellItemEnchantmentLoadInfo
             { false, FT_BYTE, "MaxLevel" },
             { true, FT_BYTE, "ScalingClass" },
             { true, FT_BYTE, "ScalingClassRestricted" },
-            { false, FT_INT, "TransmogPlayerConditionID" },
+            
         };
         static DB2LoadInfo const loadInfo(&fields[0], std::extent<decltype(fields)>::value, SpellItemEnchantmentMeta::Instance(), HOTFIX_SEL_SPELL_ITEM_ENCHANTMENT);
         return &loadInfo;

@@ -2897,6 +2897,7 @@ struct SpellItemEnchantmentEntry
     LocalizedString* Name;
     uint32 EffectArg[MAX_ITEM_ENCHANTMENT_EFFECTS];
     float EffectScalingPoints[MAX_ITEM_ENCHANTMENT_EFFECTS];
+    uint32 TransmogPlayerConditionID;
     uint32 TransmogCost;
     uint32 IconFileDataID;
     int16 EffectPointsMin[MAX_ITEM_ENCHANTMENT_EFFECTS];
@@ -2911,8 +2912,7 @@ struct SpellItemEnchantmentEntry
     uint8 MinLevel;
     uint8 MaxLevel;
     int8 ScalingClass;
-    int8 ScalingClassRestricted;
-    uint32 TransmogPlayerConditionID;
+    int8 ScalingClassRestricted; 
 };
 
 struct SpellItemEnchantmentConditionEntry
