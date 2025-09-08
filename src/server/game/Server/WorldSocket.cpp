@@ -329,7 +329,7 @@ void WorldSocket::SetWorldSession(WorldSession* session)
 
 bool WorldSocket::ReadHeaderHandler()
 {
-    ASSERT(_headerBuffer.GetActiveSize() == SizeOfClientHeader, "Header size " SZFMTD " different than expected %u", _headerBuffer.GetActiveSize(), SizeOfClientHeader);
+    ASSERT(_headerBuffer.GetActiveSize() == SizeOfClientHeader, "Header size " SZFMTD " different than expected " SZFMTD, _headerBuffer.GetActiveSize(), SizeOfClientHeader);
 
     _authCrypt.DecryptRecv(_headerBuffer.GetReadPointer(), 4);
 
