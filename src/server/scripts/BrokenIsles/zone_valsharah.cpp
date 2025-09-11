@@ -18,7 +18,7 @@
 #include "ScriptMgr.h"
 
 
-void AddSC_valsharah()
+void AddSC_zone_valsharah()
 {
 
 }

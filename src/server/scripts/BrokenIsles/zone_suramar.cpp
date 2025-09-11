@@ -18,7 +18,7 @@
 #include "ScriptMgr.h"
 
 
-void AddSC_suramar()
+void AddSC_zone_suramar()
 {
 
 }

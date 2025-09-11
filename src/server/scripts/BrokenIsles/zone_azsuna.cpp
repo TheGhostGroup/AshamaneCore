@@ -160,7 +160,7 @@ struct questnpc_mana_drained_whelpling : public ScriptedAI
     }
 };
 
-void AddSC_azsuna()
+void AddSC_zone_azsuna()
 {
     new scene_azsuna_runes();
     RegisterCreatureAI(questnpc_soul_gem);

@@ -22,12 +22,12 @@
 void AddSC_legion_portal_at_scripts();
 
 // Zones
-void AddSC_dalaran_legion();
-void AddSC_azsuna();
-void AddSC_highmountain();
-void AddSC_stormheim();
-void AddSC_suramar();
-void AddSC_valsharah();
+void AddSC_zone_dalaran_broken_isle();
+void AddSC_zone_azsuna();
+void AddSC_zone_highmountain();
+void AddSC_zone_stormheim();
+void AddSC_zone_suramar();
+void AddSC_zone_valsharah();
 void AddSC_zone_argus_krokuun();
 void AddSC_zone_argus_antoran_wastes();
 void AddSC_zone_argus_macaree();
@@ -183,12 +183,12 @@ void AddBrokenIslesScripts()
     AddSC_legion_portal_at_scripts();
 
     // Zones
-    AddSC_dalaran_legion();
-    AddSC_azsuna();
-    AddSC_highmountain();
-    AddSC_stormheim();
-    AddSC_suramar();
-    AddSC_valsharah();
+    AddSC_zone_dalaran_broken_isle();
+    AddSC_zone_azsuna();
+    AddSC_zone_highmountain();
+    AddSC_zone_stormheim();
+    AddSC_zone_suramar();
+    AddSC_zone_valsharah();
     AddSC_zone_argus_krokuun();
     AddSC_zone_argus_antoran_wastes();
     AddSC_zone_argus_macaree();
