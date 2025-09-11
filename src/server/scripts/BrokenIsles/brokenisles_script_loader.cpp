@@ -48,7 +48,7 @@ void AddSC_class_hall_priest();
 void AddSC_class_hall_rogue();
 void AddSC_class_hall_shaman();
 void AddSC_class_hall_warlock();
-void AddSC_class_hall_warrior();
+void AddSC_zone_orderhall_warrior();
 
 // Professions
 void AddSC_legion_profession_blacksmithing();
@@ -209,7 +209,7 @@ void AddBrokenIslesScripts()
     AddSC_class_hall_rogue();
     AddSC_class_hall_shaman();
     AddSC_class_hall_warlock();
-    AddSC_class_hall_warrior();
+    AddSC_zone_orderhall_warrior();
 
     // Professions
     AddSC_legion_profession_blacksmithing();

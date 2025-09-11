@@ -128,7 +128,7 @@ struct npc_class_hall_warrior_aerylia : public ScriptedAI
     }
 };
 
-void AddSC_class_hall_warrior()
+void AddSC_zone_orderhall_warrior()
 {
     RegisterSpellScript(spell_class_hall_warrior_jump_exit);
     RegisterSpellScript(spell_class_hall_warrior_jump_teleport);
