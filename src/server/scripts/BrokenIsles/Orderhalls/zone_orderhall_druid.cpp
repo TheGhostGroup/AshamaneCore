@@ -54,7 +54,7 @@ public:
     uint32 _teleportSpell;
 };
 
-void AddSC_class_hall_druid()
+void AddSC_orderhall_druid()
 {
     new npc_class_hall_druid_gatewarden("npc_class_hall_druid_gatewarden_dreamgrove",   199549);
     new npc_class_hall_druid_gatewarden("npc_class_hall_druid_gatewarden_hyjal",        0);

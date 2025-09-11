@@ -18,6 +18,6 @@
 
 #include "ScriptMgr.h"
 
-void AddSC_class_hall_monk()
+void AddSC_orderhall_priest()
 {
 }

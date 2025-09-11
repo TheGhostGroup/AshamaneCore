@@ -37,18 +37,18 @@ void AddSC_zone_mardum();
 void AddSC_zone_vault_of_wardens();
 
 // Class Halls
-void AddSC_class_hall_dh();
-void AddSC_class_hall_dk();
-void AddSC_class_hall_druid();
-void AddSC_class_hall_hunter();
-void AddSC_class_hall_mage();
-void AddSC_class_hall_monk();
-void AddSC_class_hall_paladin();
-void AddSC_class_hall_priest();
-void AddSC_class_hall_rogue();
-void AddSC_class_hall_shaman();
-void AddSC_class_hall_warlock();
-void AddSC_zone_orderhall_warrior();
+void AddSC_orderhall_dh();
+void AddSC_orderhall_dk();
+void AddSC_orderhall_druid();
+void AddSC_orderhall_hunter();
+void AddSC_orderhall_mage();
+void AddSC_orderhall_monk();
+void AddSC_orderhall_paladin();
+void AddSC_orderhall_priest();
+void AddSC_orderhall_rogue();
+void AddSC_orderhall_shaman();
+void AddSC_orderhall_warlock();
+void AddSC_orderhall_warrior();
 
 // Professions
 void AddSC_legion_profession_blacksmithing();
@@ -198,18 +198,18 @@ void AddBrokenIslesScripts()
     AddSC_zone_vault_of_wardens();
 
     // Class Halls
-    AddSC_class_hall_dh();
-    AddSC_class_hall_dk();
-    AddSC_class_hall_druid();
-    AddSC_class_hall_hunter();
-    AddSC_class_hall_mage();
-    AddSC_class_hall_monk();
-    AddSC_class_hall_paladin();
-    AddSC_class_hall_priest();
-    AddSC_class_hall_rogue();
-    AddSC_class_hall_shaman();
-    AddSC_class_hall_warlock();
-    AddSC_zone_orderhall_warrior();
+    AddSC_orderhall_dh();
+    AddSC_orderhall_dk();
+    AddSC_orderhall_druid();
+    AddSC_orderhall_hunter();
+    AddSC_orderhall_mage();
+    AddSC_orderhall_monk();
+    AddSC_orderhall_paladin();
+    AddSC_orderhall_priest();
+    AddSC_orderhall_rogue();
+    AddSC_orderhall_shaman();
+    AddSC_orderhall_warlock();
+    AddSC_orderhall_warrior();
 
     // Professions
     AddSC_legion_profession_blacksmithing();
