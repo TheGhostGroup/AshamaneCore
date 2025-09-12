@@ -18,6 +18,6 @@
 
 #include "ScriptMgr.h"
 
-void AddSC_class_hall_dh()
+void AddSC_orderhall_hunter()
 {
 }

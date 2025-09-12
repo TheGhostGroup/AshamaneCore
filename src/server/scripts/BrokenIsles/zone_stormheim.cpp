@@ -18,7 +18,7 @@
 #include "ScriptMgr.h"
 
 
-void AddSC_stormheim()
+void AddSC_zone_stormheim()
 {
 
 }

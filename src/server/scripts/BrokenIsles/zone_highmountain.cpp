@@ -18,7 +18,7 @@
 #include "ScriptMgr.h"
 
 
-void AddSC_highmountain()
+void AddSC_zone_highmountain()
 {
 
 }

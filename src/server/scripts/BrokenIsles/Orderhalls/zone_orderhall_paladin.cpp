@@ -18,6 +18,6 @@
 
 #include "ScriptMgr.h"
 
-void AddSC_class_hall_warlock()
+void AddSC_orderhall_paladin()
 {
 }
