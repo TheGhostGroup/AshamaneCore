@@ -820,10 +820,11 @@ void WorldSession::SendTutorialsData()
 
 void WorldSession::SaveTutorialsData(CharacterDatabaseTransaction& trans)
 {
-    if (!_tutorialsChanged)
+    if (!(_tutorialsChanged & TUTORIALS_FLAG_CHANGED))
         return;
-
-    CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_HAS_TUTORIALS);
+    
+    bool const hasTutorialsInDB = (_tutorialsChanged & TUTORIALS_FLAG_LOADED_FROM_DB) != 0;
+    CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_TUTORIALS);
     stmt->setUInt32(0, GetAccountId());
     bool hasTutorials = bool(CharacterDatabase.Query(stmt));
     // Modify data in DB
