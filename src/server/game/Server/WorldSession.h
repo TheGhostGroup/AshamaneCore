@@ -1080,7 +1080,7 @@ class TC_GAME_API WorldSession
             if (_tutorials[index] != value)
             {
                 _tutorials[index] = value;
-                _tutorialsChanged = true;
+                _tutorialsChanged |= TUTORIALS_FLAG_CHANGED;
             }
         }
         // Auction
@@ -1932,7 +1932,7 @@ class TC_GAME_API WorldSession
         std::atomic<uint32> m_clientTimeDelay;
         AccountData _accountData[NUM_ACCOUNT_DATA_TYPES];
         uint32 _tutorials[MAX_ACCOUNT_TUTORIAL_VALUES];
-        bool   _tutorialsChanged;
+        uint8   _tutorialsChanged;
         std::vector<std::string> _registeredAddonPrefixes;
         bool _filterAddonMessages;
         uint32 recruiterId;
