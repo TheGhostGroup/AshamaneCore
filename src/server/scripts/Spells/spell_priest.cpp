@@ -1374,7 +1374,7 @@ class spell_pri_phantasm : public SpellScriptLoader
             void HandleEffectProc(AuraEffect const* /*aurEff*/, ProcEventInfo& /*eventInfo*/)
             {
                 PreventDefaultAction();
-                GetTarget()->RemoveMovementImpairingAuras();
+                GetTarget()->RemoveMovementImpairingAuras(true);
             }
 
             void Register() override
