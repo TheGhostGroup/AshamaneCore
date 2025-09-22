@@ -3271,10 +3271,7 @@ void Spell::EffectScriptEffect(SpellEffIndex effIndex)
                     {
                         caster->RewardPlayerAndGroupAtEvent(18388, unitTarget);
                         if (Creature* target = unitTarget->ToCreature())
-                        {
-                            target->setDeathState(CORPSE);
-                            target->RemoveCorpse();
-                        }
+                            target->DespawnOrUnsummon();
                     }
                     break;
                 // Mug Transformation

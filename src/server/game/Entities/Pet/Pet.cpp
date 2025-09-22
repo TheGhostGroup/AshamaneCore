@@ -623,7 +623,7 @@ void Pet::Update(uint32 diff)
     }
     Creature::Update(diff);
 }
-
+/*
 void Creature::Regenerate(Powers power)
 {
     uint32 curValue = GetPower(power);
@@ -663,6 +663,7 @@ void Creature::Regenerate(Powers power)
 
     ModifyPower(power, intVal);
 }
+*/
 
 void Pet::Remove(PetSaveMode mode, bool returnreagent)
 {
