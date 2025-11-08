@@ -450,8 +450,7 @@ bool SpellEffectInfo::IsFarUnitTargetEffect() const
 {
     return (Effect == SPELL_EFFECT_SUMMON_PLAYER)
         || (Effect == SPELL_EFFECT_SUMMON_RAF_FRIEND)
-        || (Effect == SPELL_EFFECT_RESURRECT)
-        || (Effect == SPELL_EFFECT_SKIN_PLAYER_CORPSE);
+        || (Effect == SPELL_EFFECT_RESURRECT);
 }
 
 bool SpellEffectInfo::IsFarDestTargetEffect() const
@@ -1311,9 +1310,6 @@ bool SpellInfo::HasTarget(uint32 target) const
 bool SpellInfo::CasterCanTurnDuringCast() const
 {
     if (HasAttribute(SPELL_ATTR5_DONT_TURN_DURING_CAST))
-        return false;
-
-    if (AttributesCu & SPELL_ATTR0_CU_DONT_TURN_DURING_CAST)
         return false;
 
     // Todo : Find more generic way ?
@@ -3439,7 +3435,13 @@ void SpellInfo::ApplyAllSpellImmunitiesTo(Unit* target, SpellEffectInfo const* e
                 target->ApplySpellImmune(Id, IMMUNITY_MECHANIC, i, apply);
 
         if (apply && HasAttribute(SPELL_ATTR1_DISPEL_AURAS_ON_IMMUNITY))
-            target->RemoveAurasWithMechanic(mechanicImmunity, AURA_REMOVE_BY_DEFAULT, Id);
+        {
+            // exception for purely snare mechanic (eg. hands of freedom)!
+            if (mechanicImmunity == (1 << MECHANIC_SNARE))
+                target->RemoveMovementImpairingAuras(false);
+            else
+                target->RemoveAurasWithMechanic(mechanicImmunity, AURA_REMOVE_BY_DEFAULT, Id);
+        }
     }
 
     if (uint32 dispelImmunity = immuneInfo->DispelImmune)

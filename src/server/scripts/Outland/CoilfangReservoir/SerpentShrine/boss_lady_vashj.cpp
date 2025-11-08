@@ -803,11 +803,10 @@ public:
                 // check if vashj is death
                 Unit* Vashj = ObjectAccessor::GetUnit(*me, instance->GetGuidData(DATA_LADYVASHJ));
                 if (!Vashj || !Vashj->IsAlive() || ENSURE_AI(boss_lady_vashj::boss_lady_vashjAI, Vashj->ToCreature()->AI())->Phase != 3)
-                {
-                    // remove
-                    me->setDeathState(DEAD);
-                    me->RemoveCorpse();
+                {  
                     me->setFaction(35);
+                    me->DespawnOrUnsummon();
+                    return;
                 }
 
                 CheckTimer = 1000;

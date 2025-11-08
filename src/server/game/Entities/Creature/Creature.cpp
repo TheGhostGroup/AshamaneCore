@@ -196,7 +196,8 @@ m_respawnDelay(300), m_corpseDelay(60), m_respawnradius(0.0f), m_boundaryCheckTi
 m_defaultMovementType(IDLE_MOTION_TYPE), m_spawnId(UI64LIT(0)), m_equipmentId(0), m_originalEquipmentId(0), m_AlreadyCallAssistance(false),
 m_AlreadySearchedAssistance(false), m_regenHealth(true), m_cannotReachTarget(false), m_cannotReachTimer(0), m_AI_locked(false), m_meleeDamageSchoolMask(SPELL_SCHOOL_MASK_NORMAL),
 m_originalEntry(0), m_homePosition(), m_transportHomePosition(), m_creatureInfo(nullptr), m_creatureData(nullptr), m_waypointID(0), m_path_id(0), m_formation(nullptr),
-m_focusSpell(nullptr), m_focusDelay(0), m_shouldReacquireTarget(false), m_suppressedOrientation(0.0f), m_wildBattlePet(nullptr), m_disableHealthRegen(false), _sparringHealthPct(0)
+m_focusSpell(nullptr), m_focusDelay(0), m_shouldReacquireTarget(false), m_suppressedOrientation(0.0f), m_wildBattlePet(nullptr), m_disableHealthRegen(false), _sparringHealthPct(0),
+_lastDamagedTime(0)
 {
     m_regenTimer = CREATURE_REGEN_INTERVAL;
     m_valuesCount = UNIT_END;
@@ -266,12 +267,7 @@ void Creature::RemoveFromWorld()
 
 void Creature::DisappearAndDie()
 {
-    DestroyForNearbyPlayers();
-    //SetVisibility(VISIBILITY_OFF);
-    //ObjectAccessor::UpdateObjectVisibility(this);
-    if (IsAlive())
-        setDeathState(JUST_DIED);
-    RemoveCorpse(false);
+    ForcedDespawn(0);
 }
 
 void Creature::SearchFormation()
@@ -288,7 +284,7 @@ void Creature::SearchFormation()
         sFormationMgr->AddCreatureToGroup(frmdata->second->leaderGUID, this);
 }
 
-void Creature::RemoveCorpse(bool setSpawnTime)
+void Creature::RemoveCorpse(bool setSpawnTime, bool destroyForNearbyPlayer)
 {
     if (getDeathState() != CORPSE)
         return;
@@ -302,6 +298,9 @@ void Creature::RemoveCorpse(bool setSpawnTime)
     if (IsAIEnabled)
         AI()->CorpseRemoved(respawnDelay);
 
+    if (destroyForNearbyPlayer)
+        DestroyForNearbyPlayers();
+
     // Should get removed later, just keep "compatibility" with scripts
     if (setSpawnTime)
         m_respawnTime = time(NULL) + respawnDelay;
@@ -312,6 +311,20 @@ void Creature::RemoveCorpse(bool setSpawnTime)
 
     float x, y, z, o;
     GetRespawnPosition(x, y, z, &o);
+
+    // We were spawned on transport, calculate real position
+    if (IsSpawnedOnTransport())
+    {
+        Position& pos = m_movementInfo.transport.pos;
+        pos.m_positionX = x;
+        pos.m_positionY = y;
+        pos.m_positionZ = z;
+        pos.SetOrientation(o);
+
+        if (TransportBase* transport = GetDirectTransport())
+            transport->CalculatePassengerPosition(x, y, z, &o);;
+    }
+
     SetHomePosition(x, y, z, o);
     GetMap()->CreatureRelocation(this, x, y, z, o);
 }
@@ -447,13 +460,16 @@ bool Creature::UpdateEntry(uint32 entry, CreatureData const* data /*= nullptr*/,
     else
         SetUInt64Value(UNIT_NPC_FLAGS, npcFlags);
 
+    // if unit is in combat, keep this flag
+    unitFlags &= ~UNIT_FLAG_IN_COMBAT;
+    if (IsInCombat())
+        unitFlags |= UNIT_FLAG_IN_COMBAT;
+
     SetUInt32Value(UNIT_FIELD_FLAGS, unitFlags);
     SetUInt32Value(UNIT_FIELD_FLAGS_2, unitFlags2);
     SetUInt32Value(UNIT_FIELD_FLAGS_3, unitFlags3);
 
     SetUInt32Value(OBJECT_DYNAMIC_FLAGS, dynamicFlags);
-
-    RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IN_COMBAT);
 
     SetBaseAttackTime(BASE_ATTACK,   cInfo->BaseAttackTime);
     SetBaseAttackTime(OFF_ATTACK,    cInfo->BaseAttackTime);
@@ -581,7 +597,7 @@ void Creature::Update(uint32 diff)
                 if (m_groupLootTimer <= diff)
                 {
                     if (Group* group = sGroupMgr->GetGroupByGUID(lootingGroupLowGUID))
-                        group->EndRoll(&loot);
+                        group->EndRoll(&loot, GetMap());
 
                     m_groupLootTimer = 0;
                     lootingGroupLowGUID.Clear();
@@ -711,13 +727,11 @@ void Creature::Update(uint32 diff)
                 if (!IsInEvadeMode() && (!bInCombat || IsPolymorphed() || CanNotReachTarget()) && !HealthRegenDisabled()) // regenerate health if not in combat or if polymorphed
                     RegenerateHealth();
 
-                if (HasFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_REGENERATE_POWER))
-                {
-                    if (GetPowerType() == POWER_ENERGY)
-                        Regenerate(POWER_ENERGY);
-                    else
-                        RegenerateMana();
-                }
+                if (GetPowerType() == POWER_ENERGY)
+                    Regenerate(POWER_ENERGY);
+                else
+                    Regenerate(POWER_MANA);
+
                 m_regenTimer = CREATURE_REGEN_INTERVAL;
             }
 
@@ -737,36 +751,57 @@ void Creature::Update(uint32 diff)
     sScriptMgr->OnCreatureUpdate(this, diff);
 }
 
-void Creature::RegenerateMana()
+void Creature::Regenerate(Powers power)
 {
     uint32 curValue = GetPower(POWER_MANA);
     uint32 maxValue = GetMaxPower(POWER_MANA);
 
+    if (!HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG2_REGENERATE_POWER))
+        return;
+
     if (curValue >= maxValue)
         return;
 
-    uint32 addvalue = 0;
+    float addvalue = 0.0f;
 
-    // Combat and any controlled creature
-    if (IsInCombat() || !GetCharmerOrOwnerGUID().IsEmpty())
+    switch (power)
     {
-        float ManaIncreaseRate = sWorld->getRate(RATE_POWER_MANA);
+        case POWER_FOCUS:
+        {
+            // For hunter pets.
+            addvalue = 24 * sWorld->getRate(RATE_POWER_FOCUS);
+            break;
+        }
+        case POWER_ENERGY:
+        {
+            // For deathknight's ghoul.
+            addvalue = 20;
+            break;
+        }
+        case POWER_MANA:
+        {
+            if (IsInCombat() || GetCharmerOrOwnerGUID().IsEmpty())
+            {
+                float ManaIncreaseRate = sWorld->getRate(RATE_POWER_MANA);
+                
+                addvalue = uint32((27.0f / 5.0f + 17.0f * ManaIncreaseRate));
+            }
+            else 
+                addvalue = maxValue / 3;
 
-        addvalue = int32((27.0f / 5.0f + 17.0f) * ManaIncreaseRate);
+            break;
+        }
+        default:
+            return; 
     }
-    else
-        addvalue = maxValue / 3;
+
 
     // Apply modifiers (if any).
-    addvalue *= GetTotalAuraMultiplierByMiscValue(SPELL_AURA_MOD_POWER_REGEN_PERCENT, POWER_MANA);
+    addvalue *= GetTotalAuraMultiplierByMiscValue(SPELL_AURA_MOD_POWER_REGEN_PERCENT, power);
 
-    addvalue += GetTotalAuraModifierByMiscValue(SPELL_AURA_MOD_POWER_REGEN, POWER_MANA) * CREATURE_REGEN_INTERVAL / (5 * IN_MILLISECONDS);
+    addvalue += GetTotalAuraModifierByMiscValue(SPELL_AURA_MOD_POWER_REGEN, power) * (IsHunterPet() ? PET_FOCUS_REGEN_INTERVAL : CREATURE_REGEN_INTERVAL) / (5 * IN_MILLISECONDS);
 
-    int32 intVal = int32(addvalue);
-    if (IsAIEnabled)
-        AI()->RegeneratePower(POWER_MANA, intVal);
-
-    ModifyPower(POWER_MANA, intVal);
+    ModifyPower(power, int32(addvalue));
 }
 
 void Creature::RegenerateHealth()
@@ -782,8 +817,8 @@ void Creature::RegenerateHealth()
 
     uint32 addvalue = 0;
 
-    // Not only pet, but any controlled creature
-    if (!GetCharmerOrOwnerGUID().IsEmpty())
+    // Not only pet, but any controlled creature (and not polymorphed)
+    if (!GetCharmerOrOwnerGUID().IsEmpty() && !IsPolymorphed())
     {
         float HealthIncreaseRate = sWorld->getRate(RATE_HEALTH);
 
@@ -925,6 +960,10 @@ bool Creature::Create(ObjectGuid::LowType guidlow, Map* map, uint32 entry, float
         TC_LOG_ERROR("entities.unit", "Creature::Create(): given coordinates for creature (guidlow " UI64FMTD ", entry %d) are not valid (X: %f, Y: %f, Z: %f, O: %f)", guidlow, entry, x, y, z, ang);
         return false;
     }
+
+    // Allow players to see those units while dead, do it here (mayby altered by addon auras)
+    if (cinfo->type_flags & CREATURE_TYPE_FLAG_GHOST_VISIBLE)
+        m_serverSideVisibility.SetValue(SERVERSIDE_VISIBILITY_GHOST, GHOST_VISIBILITY_ALIVE | GHOST_VISIBILITY_GHOST);
 
     if (!CreateFromProto(guidlow, entry, data, vehId))
         return false;
@@ -1912,7 +1951,7 @@ void Creature::Respawn(bool force)
             setDeathState(CORPSE);
     }
 
-    RemoveCorpse(false);
+    RemoveCorpse(false, false);
 
     if (getDeathState() == DEAD)
     {
@@ -1970,29 +2009,21 @@ void Creature::ForcedDespawn(uint32 timeMSToDespawn, Seconds const& forceRespawn
         return;
     }
 
+    // do it before killing creature
+    DestroyForNearbyPlayers();
+
+    if (IsAlive())
+        setDeathState(JUST_DIED);
+
+    bool overrideRespawnTime = true;
     if (forceRespawnTimer > Seconds::zero())
     {
-        if (IsAlive())
-        {
-            uint32 respawnDelay = m_respawnDelay;
-            uint32 corpseDelay = m_corpseDelay;
-            m_respawnDelay = forceRespawnTimer.count();
-            m_corpseDelay = 0;
-            setDeathState(JUST_DIED);
-            m_respawnDelay = respawnDelay;
-            m_corpseDelay = corpseDelay;
-        }
-        else
-        {
-            m_corpseRemoveTime = time(NULL);
-            m_respawnTime = time(NULL) + forceRespawnTimer.count();
-        }
+        SetRespawnTime(forceRespawnTimer.count());
+        overrideRespawnTime = false;
     }
-    else
-        if (IsAlive())
-            setDeathState(JUST_DIED);
 
-    RemoveCorpse(false);
+    // Skip corpse decay time
+    RemoveCorpse(overrideRespawnTime, false);
 }
 
 void Creature::DespawnOrUnsummon(uint32 msTimeToDespawn /*= 0*/, Seconds const& forceRespawnTimer /*= 0*/)
@@ -2001,6 +2032,11 @@ void Creature::DespawnOrUnsummon(uint32 msTimeToDespawn /*= 0*/, Seconds const& 
         summon->UnSummon(msTimeToDespawn);
     else
         ForcedDespawn(msTimeToDespawn, forceRespawnTimer);
+}
+
+bool Creature::HasMechanicTemplateImmunity(uint32 mask) const
+{
+    return !GetOwnerGUID().IsPlayer() && (GetCreatureTemplate()->MechanicImmuneMask & mask);
 }
 
 void Creature::DespawnCreaturesInArea(uint32 entry, float range)
@@ -2021,7 +2057,7 @@ bool Creature::IsImmunedToSpell(SpellInfo const* spellInfo, Unit* caster) const
         return false;
 
     // Creature is immune to main mechanic of the spell
-    if (GetCreatureTemplate()->MechanicImmuneMask & (1 << (spellInfo->Mechanic - 1)))
+    if (spellInfo->Mechanic > MECHANIC_NONE && HasMechanicTemplateImmunity(1 << (spellInfo->Mechanic - 1)))
         return true;
 
     // This check must be done instead of 'if (GetCreatureTemplate()->MechanicImmuneMask & (1 << (spellInfo->Mechanic - 1)))' for not break
@@ -2031,12 +2067,14 @@ bool Creature::IsImmunedToSpell(SpellInfo const* spellInfo, Unit* caster) const
     {
         if (!effect || !effect->IsEffect())
             continue;
+
         if (!IsImmunedToSpellEffect(spellInfo, effect->EffectIndex, caster))
         {
             immunedToAllEffects = false;
             break;
         }
     }
+
     if (immunedToAllEffects)
         return true;
 
@@ -2048,7 +2086,8 @@ bool Creature::IsImmunedToSpellEffect(SpellInfo const* spellInfo, uint32 index, 
     SpellEffectInfo const* effect = spellInfo->GetEffect(GetMap()->GetDifficultyID(), index);
     if (!effect)
         return true;
-    if (GetCreatureTemplate()->MechanicImmuneMask & (1 << (effect->Mechanic - 1)))
+
+    if (effect->Mechanic > MECHANIC_NONE && HasMechanicTemplateImmunity(1 << (effect->Mechanic - 1)))
         return true;
 
     if (GetCreatureTemplate()->type == CREATURE_TYPE_MECHANICAL && effect->Effect == SPELL_EFFECT_HEAL)
@@ -2270,6 +2309,14 @@ bool Creature::CanAssistTo(const Unit* u, const Unit* enemy, bool checkfaction /
     if (!IsAlive())
         return false;
 
+    // we cannot assist in evade mode
+    if (IsInEvadeMode())
+        return false;
+
+    // or if enemy is in evade mode
+    if (enemy->GetTypeId() == TYPEID_UNIT && enemy->ToCreature()->IsInEvadeMode())
+        return true;
+
     // we don't need help from non-combatant ;)
     if (IsCivilian())
         return false;
@@ -2363,21 +2410,39 @@ bool Creature::CanCreatureAttack(Unit const* victim, bool /*force*/) const
     if (IsAIEnabled && !AI()->CanAIAttack(victim))
         return false;
 
-    if (GetMap()->IsDungeon())
+    // we cannot attack in evade mode
+    if (IsInEvadeMode())
+        return true;
+    // or if enemy is in evade mode
+    if (victim->GetTypeId() == TYPEID_UNIT && victim->ToCreature()->IsInEvadeMode())
         return true;
 
-    // if the mob is actively being damaged, do not reset due to distance unless it's a world boss
-    if (!isWorldBoss())
-        if (time(NULL) - GetLastDamagedTime() <= MAX_AGGRO_RESET_TIME)
-            return true;
+    if (!GetCharmerOrOwnerGUID().IsPlayer())
+    {
+       if (GetMap()->IsDungeon())
+           return true; 
 
-    //Use AttackDistance in distance check if threat radius is lower. This prevents creature bounce in and out of combat every update tick.
-    float dist = std::max(GetAttackDistance(victim), sWorld->getFloatConfig(CONFIG_THREAT_RADIUS)) + m_CombatDistance;
+        // don't check distance to home position if recently damaged, this should include taunt auras
+        if (!isWorldBoss() && (GetLastDamagedTime() > sWorld->GetGameTime() || HasAuraType(SPELL_AURA_MOD_TAUNT)))
+            return true;
+    }
+
+    // Map visibility range, but no more than 2*cell size
+    float dist = std::min<float>(GetMap()->GetVisibilityRange(), SIZE_OF_GRID_CELL * 2);
 
     if (Unit* unit = GetCharmerOrOwner())
         return victim->IsWithinDist(unit, dist);
     else
-        return victim->IsInDist(&m_homePosition, dist);
+    {
+        // include sizes for huge npcs
+        dist += GetObjectSize() + victim->GetObjectSize();
+
+        // to prevent creatures in air ignore attacks because distance is already too high...
+        if (GetCreatureTemplate()->InhabitType & INHABIT_AIR)
+            return victim->IsInDist2d(&m_homePosition, dist);
+        else
+            return victim->IsInDist(&m_homePosition, dist);
+    }
 }
 
 CreatureAddon const* Creature::GetCreatureAddon() const
@@ -2568,11 +2633,13 @@ void Creature::GetRespawnPosition(float &x, float &y, float &z, float* ori, floa
         }
     }
 
-    x = GetPositionX();
-    y = GetPositionY();
-    z = GetPositionZ();
+    // changed this from current position to home position, fixes world summons with infinite duration (wg npcs for example)
+    Position homePos = GetHomePosition();
+    x = homePos.GetPositionX();
+    y = homePos.GetPositionY();
+    z = homePos.GetPositionZ();
     if (ori)
-        *ori = GetOrientation();
+        *ori = homePos.GetOrientation();
     if (dist)
         *dist = 0;
 }
