@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: windows-2022
     env:
       CMAKE_BUILD_TYPE: RelWithDebInfo
       MYSQL_ROOT_DIR: C:/Program Files/MySQL/MySQL Server 8.0
